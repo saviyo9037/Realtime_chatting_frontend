@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ;
+const API_BASE_URL = 'http://localhost:5000/api';
 
 class ApiService {
   constructor() {
@@ -67,6 +67,11 @@ class ApiService {
       method: 'PUT',
       body: JSON.stringify({ senderId }),
     });
+  }
+
+  // Get all users
+  async getAllUsers() {
+    return this.request('/auth/users');
   }
 }
 

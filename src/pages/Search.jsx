@@ -1,18 +1,33 @@
-import React, { useState } from 'react';
-import { FaSearch, FaUserPlus } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { FaSearch, FaComment } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
 
 const Search = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-  // Sample users for demo
-  const users = [
-    { id: 1, name: 'John Doe', email: 'john@example.com' },
-    { id: 2, name: 'Jane Smith', email: 'jane@example.com' },
-    { id: 3, name: 'Bob Wilson', email: 'bob@example.com' },
-    { id: 4, name: 'Alice Brown', email: 'alice@example.com' },
-    { id: 5, name: 'Charlie Davis', email: 'charlie@example.com' },
-    { id: 6, name: 'Eva Martinez', email: 'eva@example.com' },
-  ];
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const response = await api.getAllUsers();
+      setUsers(response);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMessageClick = (user) => {
+    // Navigate to messages with the selected user
+    navigate('/messages', { state: { selectedUser: user } });
+  };
 
   const filteredUsers = users.filter(user =>
     user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -42,10 +57,14 @@ const Search = () => {
             {searchQuery ? 'Search Results' : 'Suggested Users'}
           </h3>
           
-          {filteredUsers.length > 0 ? (
+          {loading ? (
+            <div className="p-8 text-center text-gray-500">
+              Loading users...
+            </div>
+          ) : filteredUsers.length > 0 ? (
             <div className="divide-y">
               {filteredUsers.map((user) => (
-                <div key={user.id} className="flex items-center justify-between p-4 hover:bg-gray-50">
+                <div key={user._id} className="flex items-center justify-between p-4 hover:bg-gray-50">
                   <div className="flex items-center">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold mr-3">
                       {user.name.charAt(0)}
@@ -55,8 +74,11 @@ const Search = () => {
                       <p className="text-sm text-gray-500">{user.email}</p>
                     </div>
                   </div>
-                  <button className="p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600">
-                    <FaUserPlus />
+                  <button 
+                    onClick={() => handleMessageClick(user)}
+                    className="p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600"
+                  >
+                    <FaComment />
                   </button>
                 </div>
               ))}

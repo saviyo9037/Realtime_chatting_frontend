@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import api from '../services/api';
@@ -7,21 +8,35 @@ import { FaPaperPlane, FaArrowLeft } from 'react-icons/fa';
 const Messages = () => {
   const { user } = useAuth();
   const { socket, messages, sendMessage, isOnline } = useSocket();
+  const location = useLocation();
   const [conversations, setConversations] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [messageText, setMessageText] = useState('');
   const [chatMessages, setChatMessages] = useState([]);
   const messagesEndRef = useRef(null);
 
-  // Sample conversations for demo
-  const sampleConversations = [
-    { _id: '1', user: { _id: '2', name: 'John Doe', email: 'john@example.com' }, lastMessage: { message: 'Hey!', timestamp: new Date() }, unreadCount: 2 },
-    { _id: '2', user: { _id: '3', name: 'Jane Smith', email: 'jane@example.com' }, lastMessage: { message: 'See you later', timestamp: new Date() }, unreadCount: 0 },
-    { _id: '3', user: { _id: '4', name: 'Bob Wilson', email: 'bob@example.com' }, lastMessage: { message: 'Thanks!', timestamp: new Date() }, unreadCount: 1 },
-  ];
-
+  // Handle selectedUser from navigation state
   useEffect(() => {
-    setConversations(sampleConversations);
+    if (location.state?.selectedUser) {
+      setSelectedUser(location.state.selectedUser);
+      // Clear the state after using it
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
+  // Fetch conversations from API
+  useEffect(() => {
+    const fetchConversations = async () => {
+      try {
+        const data = await api.getConversations();
+        setConversations(data);
+      } catch (error) {
+        console.log('Using demo conversations');
+        // Keep empty or set sample data as fallback
+        setConversations([]);
+      }
+    };
+    fetchConversations();
   }, []);
 
   useEffect(() => {
